@@ -1,0 +1,40 @@
+# github rest api -> bridge -> mongodb
+
+## Github
+
+* est-ce que je tente graphql ?
+
+## wekan/mongodb
+
+* choper tous les boards
+** si y a pas YunoHost, le créer
+** le sauver dans un coin (dans mongodb ?) comme étant le board target
+* pour toutes les PRs de tous les projets
+** si y a pas de carte correspondante, en faire une, sauver la carte
+** pour chaque pr/carte
+*** vérifier que bien dans la bonne colonne, sinon la bouger
+*** vérifier si elle a été mergé/fermée, si oui l'archiver
+*** vérifier si elle a été renomé, si oui la renomer
+*** vérifier si elle les tags ont changé, si oui updaté
+*** vérifier si elle la description a changé, si oui l'updater
+*** vérifier si y a eu des réponses, si oui les y rajouter / updater chaque réponse
+
+Faire pour chaque ticket finalement:
+* lister tous les labels
+** pour chaque milestone, choper la colonne
+** si elle est pas là, la créer, la sauver
+** si elle a été renomer, la renomer
+* lister toutes les colonnes
+** pour chaque milestone, choper la colonne
+** si elle est pas là, la créer, la sauver
+** si elle a été renomer, la renomer
+
+### gestion des users lors de la création de la carte ?
+
+* genre aussi faire un mapping des users ?
+** avec un bit "vrai user"
+** si "faux" user -> lui rajouter automatiquement un compte
+** updater son avatar/son nom
+
+# github webhook -> bridge server http -> mongodb
+# wekan push -> bridge serveur http -> github rest api

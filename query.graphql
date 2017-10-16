@@ -1,0 +1,78 @@
+{
+  repository(owner: "yunohost", name: "yunohost") {
+    pullRequests(last: 100) {
+      totalCount
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+      }
+      edges {
+        node {
+          number
+          title
+          bodyText
+          url
+          state
+          createdAt
+          updatedAt
+          merged
+          mergeable
+          closed
+          state
+          milestone {
+            id
+            number
+            title
+            description
+          }
+          headRef {
+            id
+          }
+          headRefName
+          headRepository {
+            id
+          }
+          author {
+            avatarUrl
+            login
+            resourcePath
+            url
+          }
+          assignees(first: 100) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+          labels(first: 100) {
+            edges {
+              node {
+                id
+                name
+                color
+              }
+            }
+          }
+          comments(first: 100) {
+            edges {
+              node {
+                id
+                author {
+                  avatarUrl
+                  login
+                  resourcePath
+                  url
+                }
+                bodyText
+                createdAt
+                updatedAt
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
