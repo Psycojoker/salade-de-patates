@@ -223,12 +223,12 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
         list_ = get_list_for_milestone(client, board, milestone)
         print "selected list '%s' (%s)" % (milestone["title"], list_)
 
+    # get user for ticket
+    user = get_user(client, pr["author"])
+    print "selected user '%s' (%s)" % (pr["author"]["login"], user)
+
     # we haven't imported this PR yet
     if not bridge_pr:
-        # get user for ticket
-        user = get_user(client, pr["author"])
-        print "selected user '%s' (%s)" % (pr["author"]["login"], user)
-
         cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
         sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else 0)
 
@@ -274,6 +274,10 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
                 print "card is re-opened"
             card["archived"] = pr["closed"]
 
+        if card["userId"] != user:
+            print "card has change of author for a weird reason, update it"
+            card["userId"] = user
+
         client.wekan.cards.update({"_id": card["_id"]}, {"$set": card})
 
     print "----"
@@ -281,7 +285,6 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
 
 # TODO
 # * auto archive columns
-# * auto archive cards
 # * prefix project name on title or color ?
 # * import labels
 # * import description
