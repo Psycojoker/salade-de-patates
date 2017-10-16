@@ -267,6 +267,13 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
             after_list = get_by_id(client.wekan.lists, list_)
             print "move card from '%s' -> '%s'" % (before_list["title"], after_list["title"])
 
+        if card["archived"] != pr["closed"]:
+            if pr["closed"]:
+                print "archiving the card"
+            else:
+                print "card is re-opened"
+            card["archived"] = pr["closed"]
+
         client.wekan.cards.update({"_id": card["_id"]}, {"$set": card})
 
     print "----"
