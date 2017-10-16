@@ -134,7 +134,7 @@ def get_list_for_milestone(client, board, milestone):
 
     if bridge_milestone:
         print "Found bridge_milestone, return list"
-        return get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])
+        return get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])["_id"]
 
     # let's try to find an existing colum with the milestone name
     list_ = get_none(client.wekan.lists, {"title": milestone["title"]})
