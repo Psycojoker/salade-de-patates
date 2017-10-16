@@ -239,7 +239,7 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
             "listId" : list_,
             "boardId" : board["_id"],
             "sort" : sort,
-            "archived" : False,
+            "archived" : pr["closed"],
             "createdAt" : datetime.now(), # XXX uses card value?
             "dateLastActivity" : datetime.now(),
             "userId" : user
