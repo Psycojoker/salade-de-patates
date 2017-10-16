@@ -233,7 +233,7 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
         sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else 0)
 
         card = client.wekan.cards.insert({
-            "title" : pr["title"],
+            "title" : "[%s] %s" % ("yunohost", pr["title"]),
             "members" : [ ],
             "labelIds" : [ ],
             "listId" : list_,
@@ -254,8 +254,15 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
         print "create card bridge %s -> %s" % (pr["number"], card)
 
     else:
-        # TODO update
-        print "Card already exist, skip"
+        print "Card already exist, update"
+        card = get_by_id(client.wekan.cards, bridge_pr["wekan_id"])
+
+        title = "[%s] %s" % ("yunohost", pr["title"])
+        if card["title"] != title:
+            print "change title from '%s' to '%s'" % (card["title"], title)
+            card["title"] = title
+
+        client.wekan.cards.update({"_id": card["_id"]}, {"$set": card})
 
     print "----"
 
