@@ -212,19 +212,19 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
         "github_project": "yunohost"
     })
 
+    # get list for milestone
+    milestone = pr["milestone"]
+    if milestone is None:
+        print "No milestone"
+        list_ = get_default_list(client, board)
+        print "selected default list (%s)" % (list_)
+    else:
+        print "Has milestone"
+        list_ = get_list_for_milestone(client, board, milestone)
+        print "selected list '%s' (%s)" % (milestone["title"], list_)
+
     # we haven't imported this PR yet
     if not bridge_pr:
-        # get list for milestone
-        milestone = pr["milestone"]
-        if milestone is None:
-            print "No milestone"
-            list_ = get_default_list(client, board)
-            print "selected default list (%s)" % (list_)
-        else:
-            print "Has milestone"
-            list_ = get_list_for_milestone(client, board, milestone)
-            print "selected list '%s' (%s)" % (milestone["title"], list_)
-
         # get user for ticket
         user = get_user(client, pr["author"])
         print "selected user '%s' (%s)" % (pr["author"]["login"], user)
@@ -261,6 +261,11 @@ for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
         if card["title"] != title:
             print "change title from '%s' to '%s'" % (card["title"], title)
             card["title"] = title
+
+        if card["listId"] != list_:
+            before_list = get_by_id(client.wekan.lists, card["listId"])
+            after_list = get_by_id(client.wekan.lists, list_)
+            print "move card from '%s' -> '%s'" % (before_list["title"], after_list["title"])
 
         client.wekan.cards.update({"_id": card["_id"]}, {"$set": card})
 
