@@ -25,6 +25,7 @@
             number
             title
             description
+            state
           }
           headRef {
             id

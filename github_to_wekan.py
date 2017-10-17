@@ -147,7 +147,7 @@ def get_list_for_milestone(client, board, milestone):
         list_ = client.wekan.lists.insert({
             "title" : milestone["title"],
             "boardId" : board["_id"],
-            "archived" : False,
+            "archived" : milestone["state"] == "CLOSED",
             "createdAt" : datetime.now(),
             "sort" : sort
         })
