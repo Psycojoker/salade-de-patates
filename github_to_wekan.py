@@ -127,6 +127,21 @@ def get_default_list(client, board):
 
 
 def get_list_for_milestone(client, board, milestone):
+    def update_list(list_, milestone):
+        if list_["title"] != milestone["title"]:
+            print "Updating milestone 'title from '%s' to '%s'" % (list_["title"], milestone["title"])
+            list_["title"] = milestone["title"]
+            client.wekan.lists.update({"_id": list_["_id"]}, {"$set": list_})
+
+        archived = milestone["state"] == "CLOSED"
+        if list_["archived"] != archived:
+            if archived:
+                print "Archiving milestone '%s'" % (list_['title'])
+            else:
+                print "Briging milestone '%s' back from archives" % (list_['title'])
+            list_["archived"] = archived
+            client.wekan.lists.update({"_id": list_["_id"]}, {"$set": list_})
+
     bridge_milestone = get_none(client.wekan.bridge_for_milestones, {
         "github_id": milestone["number"],
         "github_project": "yunohost"
@@ -134,7 +149,9 @@ def get_list_for_milestone(client, board, milestone):
 
     if bridge_milestone:
         print "Found bridge_milestone, return list"
-        return get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])["_id"]
+        list_ = get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])
+        update_list(list_, milestone)
+        return list_["_id"]
 
     # let's try to find an existing colum with the milestone name
     list_ = get_none(client.wekan.lists, {"title": milestone["title"]})
@@ -152,6 +169,7 @@ def get_list_for_milestone(client, board, milestone):
             "sort" : sort
         })
     else:
+        update_list(list_, milestone)
         list_ = list_["_id"]
         print "List exists for milestone '%s', return it"
 
