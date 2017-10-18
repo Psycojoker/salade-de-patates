@@ -1,6 +1,6 @@
 {
   repository(owner: "yunohost", name: "yunohost") {
-    pullRequests(last: 100) {
+    pullRequests(first: 100%s) {
       totalCount
       pageInfo {
         endCursor
