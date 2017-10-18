@@ -1,5 +1,5 @@
 {
-  repository(owner: "yunohost", name: "yunohost") {
+  repository(owner: "yunohost", name: "%s") {
     pullRequests(first: 100%s) {
       totalCount
       pageInfo {
