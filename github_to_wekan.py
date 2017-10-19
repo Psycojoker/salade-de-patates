@@ -1,6 +1,7 @@
 # encoding: utf-8
 
-import json
+import string
+import random
 import requests
 from datetime import datetime
 
@@ -84,6 +85,14 @@ from pymongo import MongoClient
 #     "wekan_id": "",
 # }
 
+def generate_id():
+    # this is for a really weird bug
+    # when using mongodb directly is generate a ObjectID()
+    # but wekan seems to be generating a string instead
+    # and some part of the code expect the id to be a string and not a objectID
+    # so I need to generate string ids myself :|
+    return "".join([random.SystemRandom().choice(list(set(string.hexdigits.lower()))) for x in range(17)])
+
 def get(collection, query):
     return list(collection.find(query))[0]
 
@@ -109,6 +118,7 @@ def get_default_list(client, board):
 
     print "'No roadmap' didn't exist, create it"
     return client.wekan.lists.insert({
+        "_id" : generate_id(),
         "title" : "No roadmap",
         "boardId" : board["_id"],
         "archived" : False,
@@ -153,6 +163,7 @@ def get_list_for_milestone(client, board, milestone):
 
         print "create new list '%s'" % milestone["title"]
         list_ = client.wekan.lists.insert({
+            "_id" : generate_id(),
             "title" : milestone["title"],
             "boardId" : board["_id"],
             "archived" : milestone["state"] == "CLOSED",
@@ -186,6 +197,7 @@ def get_user(client, author):
     if user is None:
         # TODO I need to grab the real user to fill the data, I only have the actor edge here
         user = client.wekan.users.insert({
+            "_id" : generate_id(),
             "createdAt" : datetime.now(),
             "services" : { "password" : {}, "email" : {}, "resume" : {}},
             "username" : author["login"],
@@ -253,6 +265,7 @@ for project in ["yunohost", "yunohost-admin", "moulinette", "ssowat"]:
                 sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else 0)
 
                 card = client.wekan.cards.insert({
+                    "_id" : generate_id(),
                     "title" : "[%s] %s" % (project, pr["title"]),
                     "members" : [ ],
                     "labelIds" : [ ],
