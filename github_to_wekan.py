@@ -194,7 +194,7 @@ def get_user(client, author):
 
     if bridge_user:
         print "Found bridge user, return matching user (%s)" % bridge_user["wekan_id"]
-        return get_by_id(client.wekan.users, bridge_user["wekan_id"])
+        return get_by_id(client.wekan.users, bridge_user["wekan_id"])["_id"]
 
     user = get_none(client.wekan.users, {"username": author["login"]})
 
