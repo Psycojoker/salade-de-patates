@@ -114,7 +114,11 @@ def get_default_list(client, board):
         print "'No roadmap' list already exists, return it"
         return default_list["_id"]
 
-    sort = 1 + max([x.get("sort", 0) for x in client.wekan.lists.find({"boardId": board["_id"]})])
+    all_lists = client.wekan.lists.find({"boardId": board["_id"]})
+    if list(all_lists):
+        sort = 1 + max([x.get("sort", 0) for x in all_lists])
+    else:
+        sort = 0
 
     print "'No roadmap' didn't exist, create it"
     return client.wekan.lists.insert({
@@ -262,7 +266,7 @@ for project in ["yunohost", "yunohost-admin", "moulinette", "ssowat"]:
             # we haven't imported this PR yet
             if not bridge_pr:
                 cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
-                sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else 0)
+                sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
 
                 card = client.wekan.cards.insert({
                     "_id" : generate_id(),
