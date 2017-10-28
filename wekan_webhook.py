@@ -59,6 +59,8 @@ def hello():
     print request
     print request.json
 
+    # TODO check that request is json and correct or some stuff like that
+
     # card create -> we don't care about it
 
     # if card not linked to github, we don't care about it
