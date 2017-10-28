@@ -1,11 +1,11 @@
 # encoding: utf-8
 
-import string
-import random
 import requests
 from datetime import datetime
 
 from pymongo import MongoClient
+
+from common import get, get_none, get_by_id, generate_id
 
 # boards template
 # { "_id" : "9w6PGYCWbbN7RcZc3", "title" : "Welcome Board", "permission" : "private", "slug" : "welcome-board", "archived" : false, "createdAt" : ISODate("2017-10-14T09:40:02.086Z"), "stars" : 0, "labels" : [ { "color" : "green", "_id" : "Y9Pt9F", "name" : "" }, { "color" : "yellow", "_id" : "cMrA9W", "name" : "" }, { "color" : "orange", "_id" : "bmK3vt", "name" : "" }, { "color" : "red", "_id" : "HTNK4F", "name" : "" }, { "color" : "purple", "_id" : "Kfw6hX", "name" : "" }, { "color" : "blue", "_id" : "aYofHr", "name" : "" } ], "members" : [ { "userId" : "WsrKTCja75gJ2dPJj", "isAdmin" : true, "isActive" : true, "isCommentOnly" : false } ], "color" : "belize" }
@@ -84,27 +84,6 @@ from pymongo import MongoClient
 #     "github_project": "",
 #     "wekan_id": "",
 # }
-
-def generate_id():
-    # this is for a really weird bug
-    # when using mongodb directly is generate a ObjectID()
-    # but wekan seems to be generating a string instead
-    # and some part of the code expect the id to be a string and not a objectID
-    # so I need to generate string ids myself :|
-    return "".join([random.SystemRandom().choice(list(set(string.hexdigits.lower()))) for x in range(17)])
-
-
-def get(collection, query):
-    return list(collection.find(query))[0]
-
-
-def get_none(collection, query):
-    result = list(collection.find(query))
-    return result[0] if result else None
-
-
-def get_by_id(collection, id):
-    return get(collection, {"_id": id})
 
 
 def get_default_list(client, board):
