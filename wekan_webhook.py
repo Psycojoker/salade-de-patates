@@ -1,4 +1,10 @@
 from flask import Flask, request
+from pymongo import MongoClient
+
+from common import get_by_id, get_none
+
+
+client = MongoClient()
 
 # Card creation
 # 
@@ -73,6 +79,21 @@ def hello():
 
     # do we have milestone modifications events?
     # apparently no :(
+
+    client = MongoClient()
+
+    if request.json["description"] == "act-moveCard":
+        card_id = request.json["cardId"]
+        card = get_by_id(client.wekan.cards, card_id)
+
+        bridge = get_none(client.wekan.bridge_for_prs, {"wekan_id": card_id})
+
+        print bridge
+        print card
+
+        if bridge is None:
+            print "unhandled card", card_id
+            return "unhandled card"
 
     return "ok"
 
