@@ -93,6 +93,7 @@ def generate_id():
     # so I need to generate string ids myself :|
     return "".join([random.SystemRandom().choice(list(set(string.hexdigits.lower()))) for x in range(17)])
 
+
 def get(collection, query):
     return list(collection.find(query))[0]
 
