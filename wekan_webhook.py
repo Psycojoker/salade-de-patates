@@ -58,6 +58,8 @@ app = Flask(__name__)
 def hello():
     print request
     print request.json
+    import json
+    print json.dumps(request.json)
 
     # TODO check that request is json and correct or some stuff like that
 
