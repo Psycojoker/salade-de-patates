@@ -1,3 +1,5 @@
+import requests
+
 from flask import Flask, request
 from pymongo import MongoClient
 
@@ -53,6 +55,7 @@ client = MongoClient()
 # }
 
 app = Flask(__name__)
+token = open("wekan_webhook_token", "r").read().strip()
 
 @app.route("/wekan", methods=['POST'])
 def hello():
@@ -92,12 +95,49 @@ def hello():
 
         bridge = get_none(client.wekan.bridge_for_prs, {"wekan_id": card_id})
 
-        print bridge
-        print card
+        print "bridge:", bridge
+        print "card:", card
 
         if bridge is None:
             print "unhandled card", card_id
             return "unhandled card"
+
+        project = bridge["github_project"]
+
+        list_id = request.json["listId"]
+
+        list_ = get_none(client.wekan.bridge_for_milestones, {"wekan_id": list_id, "github_project": project})
+
+        # list itself can't be none
+        # list can be: know (a milestone), unknow
+        # card was in a milestone, wasn't [back to its milestone or in another milestone]
+
+        github_pr = requests.get("https://api.github.com/repos/yunohost/%s/pulls/%s" % (project, bridge["github_id"])).json()
+
+        github_milestone_id = github_pr["milestone"]["number"]
+
+        if list_ is None:
+            # TODO try to detect if there is a list that is a milestone with
+            # the same name but that isn't in that project, if so, create the
+            # milestone in the project where it's missing
+
+            # rename to include milestone name in list?
+            print "new list is not known as a milestone, skip"
+            return "ok"
+
+        # TODO default list for unmilestoning a card
+
+        # check if target column milestone number != github_milestone_id
+        # if so, change it
+        # else return
+
+        if list_["github_id"] != github_milestone_id:
+            print "online github PR is different than the targeted list, change it"
+            print [list_["github_id"]]
+            print requests.patch("https://api.github.com/repos/yunohost/%s/issues/%s" % (project, bridge["github_id"]), json={"milestone": list_["github_id"]}, headers={"Authorization": "bearer %s" % token})
+        else:
+            print "online github PR is the same than the targeted list, don't do anything"
+            return "ok"
 
     return "ok"
 
