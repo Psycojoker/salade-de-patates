@@ -439,8 +439,6 @@ token = open("wekan_webhook_token", "r").read().strip()
 def hello():
     print request
     print request.json
-    import json
-    print json.dumps(request.json)
 
     # TODO check that request is json and correct or some stuff like that
 
@@ -511,7 +509,6 @@ def hello():
 
         if list_["github_id"] != github_milestone_id:
             print "online github PR is different than the targeted list, change it"
-            print [list_["github_id"]]
             print requests.patch("https://api.github.com/repos/yunohost/%s/issues/%s" % (project, bridge["github_id"]), json={"milestone": list_["github_id"]}, headers={"Authorization": "bearer %s" % token})
         else:
             print "online github PR is the same than the targeted list, don't do anything"
