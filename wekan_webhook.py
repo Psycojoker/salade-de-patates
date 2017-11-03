@@ -138,6 +138,47 @@ def hello():
 
     return "ok"
 
+@app.route("/github", methods=['POST'])
+def github():
+    print request
+    print request.json
+
+    # github_hook_secret = open("./secret_for_webhook", "r").read().strip()
+
+    # > HMAC hex digest of the payload, using the hook's secret as the key (if
+    # > configured)
+    # if request.headers.get("X-Hub-Signature").strip() != github_hook_secret:
+        # TODO real exception
+        # raise 400
+
+    hook_type = request.headers.get("X-Github-Event")
+
+    if hook_type == "pull_request":
+        # XXX in theory, I only need to run the importation script on one PR
+        # here
+        pass
+
+    elif hook_type == "milestone":
+        # XXX in theory, I only need to run the importation script on one
+        # milestone here
+        # XXX but I don't have that, don't I? I probably need to write some
+        # code for that then
+        pass
+
+    elif hook_type == "label":
+        # TODO
+        pass
+
+    # XXX really need to do that?
+    elif hook_type == "user":
+        # TODO
+        pass
+
+    else:
+        print "unsupported hook type: %s" % hook_type
+
+    return "ok"
+
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
