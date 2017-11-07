@@ -133,6 +133,13 @@ def wekan():
         if list_["github_id"] != github_milestone_id:
             print "online github PR is different than the targeted list, change it"
             print requests.patch("https://api.github.com/repos/yunohost/%s/issues/%s" % (project, bridge["github_id"]), json={"milestone": list_["github_id"]}, headers={"Authorization": "bearer %s" % token})
+
+            query = open("./query-one.graphql", "r").read()
+            pr = requests.post("https://api.github.com/graphql",
+                               headers={"Authorization": "bearer %s" % token},
+                               json={"query": query % (project, bridge["github_id"])}).json()
+
+            import_pr(client, project, pr["data"]["repository"]["pullRequest"])
         else:
             print "online github PR is the same than the targeted list, don't do anything"
             return "ok"
