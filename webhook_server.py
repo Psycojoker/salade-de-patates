@@ -172,7 +172,6 @@ def github():
                            headers={"Authorization": "bearer %s" % token},
                            json={"query": query % (project, number)}).json()
 
-        print pr
         import_pr(client, project, pr["data"]["repository"]["pullRequest"])
 
     elif hook_type == "milestone":
