@@ -88,14 +88,14 @@ from common import get, get_none, get_by_id, generate_id
 
 def get_default_list(client, board):
     # XXX also insert in bridge?
-    default_list = get_none(client.wekan.lists, {"title": "No roadmap", "boardId": board["_id"]})
+    default_list = get_none(client.wekan.lists, {"title": "No roadmap [UNMILESTONE]", "boardId": board["_id"]})
 
     if default_list:
         print "'No roadmap' list already exists, return it"
         return default_list["_id"]
 
-    all_lists = client.wekan.lists.find({"boardId": board["_id"]})
-    if list(all_lists):
+    all_lists = list(client.wekan.lists.find({"boardId": board["_id"]}))
+    if all_lists:
         sort = 1 + max([x.get("sort", 0) for x in all_lists])
     else:
         sort = 0
@@ -103,7 +103,7 @@ def get_default_list(client, board):
     print "'No roadmap' didn't exist, create it"
     return client.wekan.lists.insert({
         "_id" : generate_id(),
-        "title" : "No roadmap",
+        "title" : "No roadmap [UNMILESTONE]",
         "boardId" : board["_id"],
         "archived" : False,
         "createdAt" : datetime.now(),
@@ -113,9 +113,9 @@ def get_default_list(client, board):
 
 def get_list_for_milestone(client, board, project, milestone):
     def update_list(list_, milestone):
-        if list_["title"] != milestone["title"]:
-            print "Updating milestone 'title from '%s' to '%s'" % (list_["title"], milestone["title"])
-            list_["title"] = milestone["title"]
+        if list_["title"] != milestone_title:
+            print "Updating milestone 'title from '%s' to '%s'" % (list_["title"], milestone_title)
+            list_["title"] = milestone_title
             client.wekan.lists.update({"_id": list_["_id"]}, {"$set": list_})
 
         archived = milestone["state"] == "CLOSED"
@@ -126,6 +126,8 @@ def get_list_for_milestone(client, board, project, milestone):
                 print "Briging milestone '%s' back from archives" % (list_['title'])
             list_["archived"] = archived
             client.wekan.lists.update({"_id": list_["_id"]}, {"$set": list_})
+
+    milestone_title = "%s [MILESTONE]" % milestone["title"]
 
     bridge_milestone = get_none(client.wekan.bridge_for_milestones, {
         "github_id": milestone["number"],
@@ -139,7 +141,7 @@ def get_list_for_milestone(client, board, project, milestone):
         return list_["_id"]
 
     # let's try to find an existing colum with the milestone name
-    list_ = get_none(client.wekan.lists, {"title": milestone["title"]})
+    list_ = get_none(client.wekan.lists, {"title": milestone_title})
 
     # create it
     if not list_:
@@ -220,11 +222,25 @@ def import_pr(client, project, pr):
     if milestone is None:
         print "No milestone"
         list_ = get_default_list(client, board)
+        title = "%s#%s %s" % (project.upper(), pr["number"], pr["title"])
         print "selected default list (%s)" % (list_)
     else:
         print "Has milestone"
         list_ = get_list_for_milestone(client, board, project, milestone)
+
+        # include milestone in card title
+        title = "%s#%s {%s} %s" % (
+            project.upper(),
+            pr["number"],
+            milestone["title"].lower().replace(" ", "-"),
+            pr["title"]
+        )
+
         print "selected list '%s' (%s)" % (milestone["title"], list_)
+
+
+    if pr["labels"]["edges"]:
+        title += " %s" % " ".join(["#" + x["node"]["name"].lower().replace(" " , "-") for x in pr["labels"]["edges"]])
 
     # get user for ticket
     user = get_user(client, pr["author"])
@@ -237,7 +253,7 @@ def import_pr(client, project, pr):
 
         card = client.wekan.cards.insert({
             "_id" : generate_id(),
-            "title" : "[%s] %s" % (project, pr["title"]),
+            "title" : title,
             "members" : [ ],
             "labelIds" : [ ],
             "listId" : list_,
@@ -261,7 +277,6 @@ def import_pr(client, project, pr):
         print "Card already exist, update"
         card = get_by_id(client.wekan.cards, bridge_pr["wekan_id"])
 
-        title = "[%s] %s" % (project, pr["title"])
         if card["title"] != title:
             print "change title from '%s' to '%s'" % (card["title"], title)
             card["title"] = title
