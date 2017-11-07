@@ -59,7 +59,7 @@ app = Flask(__name__)
 token = open("wekan_webhook_token", "r").read().strip()
 
 @app.route("/wekan", methods=['POST'])
-def hello():
+def wekan():
     print request
     print request.json
 
