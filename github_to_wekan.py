@@ -254,6 +254,7 @@ def import_pr(client, project, pr):
         card = client.wekan.cards.insert({
             "_id" : generate_id(),
             "title" : title,
+            "description": pr["url"],
             "members" : [ ],
             "labelIds" : [ ],
             "listId" : list_,
@@ -296,6 +297,10 @@ def import_pr(client, project, pr):
         if card["userId"] != user:
             print "card has change of author for a weird reason, update it"
             card["userId"] = user
+
+        if card.get("description", "") != pr["url"]:
+            print "update descript from '%s' to '%s'" % (card.get("description", ""), pr["url"])
+            card["description"] = pr["url"]
 
         client.wekan.cards.update({"_id": card["_id"]}, {"$set": card})
 
