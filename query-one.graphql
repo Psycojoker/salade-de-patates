@@ -1,0 +1,69 @@
+{
+  repository(owner: "yunohost", name: "%s") {
+    pullRequest(number: %s) {
+      number
+      title
+      bodyText
+      url
+      state
+      createdAt
+      updatedAt
+      merged
+      mergeable
+      closed
+      state
+      milestone {
+        id
+          number
+          title
+          description
+          state
+      }
+      headRef {
+        id
+      }
+      headRefName
+        headRepository {
+          id
+        }
+      author {
+        avatarUrl
+          login
+          resourcePath
+          url
+      }
+      assignees(first: 100) {
+        edges {
+          node {
+            id
+          }
+        }
+      }
+      labels(first: 100) {
+        edges {
+          node {
+            id
+              name
+              color
+          }
+        }
+      }
+      comments(first: 100) {
+        edges {
+          node {
+            id
+              author {
+                avatarUrl
+                  login
+                  resourcePath
+                  url
+              }
+            bodyText
+              createdAt
+              updatedAt
+          }
+        }
+      }
+    }
+  }
+}
