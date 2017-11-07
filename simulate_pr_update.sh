@@ -1,7 +1,7 @@
-curl -X POST 0.0.0.0:5000/github -H "Content-Type: application/json" -d '
+curl -H "X-Github-Event: pull_request" -X POST 0.0.0.0:5000/github -H "Content-Type: application/json" -d '
 {
   "action": "opened",
-  "number": 1,
+  "number": 165,
   "pull_request": {
     "url": "https://api.github.com/repos/baxterthehacker/public-repo/pulls/1",
     "id": 34778301,
@@ -9,7 +9,7 @@ curl -X POST 0.0.0.0:5000/github -H "Content-Type: application/json" -d '
     "diff_url": "https://github.com/baxterthehacker/public-repo/pull/1.diff",
     "patch_url": "https://github.com/baxterthehacker/public-repo/pull/1.patch",
     "issue_url": "https://api.github.com/repos/baxterthehacker/public-repo/issues/1",
-    "number": 1,
+    "number": 165,
     "state": "open",
     "locked": false,
     "title": "Update the README with new information",
@@ -306,7 +306,7 @@ curl -X POST 0.0.0.0:5000/github -H "Content-Type: application/json" -d '
   },
   "repository": {
     "id": 35129377,
-    "name": "public-repo",
+    "name": "yunohost",
     "full_name": "baxterthehacker/public-repo",
     "owner": {
       "login": "baxterthehacker",
