@@ -4,6 +4,7 @@ from flask import Flask, request
 from pymongo import MongoClient
 
 from common import get_by_id, get_none
+from github_to_wekan import import_pr
 
 
 client = MongoClient()
@@ -140,8 +141,8 @@ def hello():
 
 @app.route("/github", methods=['POST'])
 def github():
-    print request
-    print request.json
+    # print request
+    # print request.json
 
     # github_hook_secret = open("./secret_for_webhook", "r").read().strip()
 
@@ -154,9 +155,18 @@ def github():
     hook_type = request.headers.get("X-Github-Event")
 
     if hook_type == "pull_request":
-        # XXX in theory, I only need to run the importation script on one PR
-        # here
-        pass
+        token = open("graphql_token", "r").read().strip()
+        query = open("./query-one.graphql", "r").read()
+
+        project = request.json["repository"]["name"]
+        number = request.json["pull_request"]["number"]
+
+        pr = requests.post("https://api.github.com/graphql",
+                           headers={"Authorization": "bearer %s" % token},
+                           json={"query": query % (project, number)}).json()
+
+        print pr
+        import_pr(client, project, pr["data"]["repository"]["pullRequest"])
 
     elif hook_type == "milestone":
         # XXX in theory, I only need to run the importation script on one

@@ -111,7 +111,7 @@ def get_default_list(client, board):
     })
 
 
-def get_list_for_milestone(client, board, milestone):
+def get_list_for_milestone(client, board, project, milestone):
     def update_list(list_, milestone):
         if list_["title"] != milestone["title"]:
             print "Updating milestone 'title from '%s' to '%s'" % (list_["title"], milestone["title"])
@@ -204,108 +204,114 @@ def get_user(client, author):
     return user
 
 
-query = open("./query.graphql", "r").read()
-token = open("graphql_token", "r").read().strip()
+def import_pr(client, project, pr):
+    # TODO create the bord if it doesn't exist
+    board = get(client.wekan.boards, {"slug": "yunohost"})
 
-client = MongoClient()
+    print "Working on '%s' (%s)" % (pr["title"], pr["url"])
 
-# pull_requests = json.load(open("./data.json", "r"))
+    bridge_pr = get_none(client.wekan.bridge_for_prs, {
+        "github_id": pr["number"],
+        "github_project": project
+    })
 
-# TODO create the bord if it doesn't exist
-board = get(client.wekan.boards, {"slug": "yunohost"})
+    # get list for milestone
+    milestone = pr["milestone"]
+    if milestone is None:
+        print "No milestone"
+        list_ = get_default_list(client, board)
+        print "selected default list (%s)" % (list_)
+    else:
+        print "Has milestone"
+        list_ = get_list_for_milestone(client, board, project, milestone)
+        print "selected list '%s' (%s)" % (milestone["title"], list_)
 
-for project in ["yunohost", "yunohost-admin", "moulinette", "ssowat"]:
-    pull_requests = requests.post("https://api.github.com/graphql", headers={"Authorization": "bearer %s" % token}, json={"query": query % (project, "")}).json()
+    # get user for ticket
+    user = get_user(client, pr["author"])
+    print "selected user '%s' (%s)" % (pr["author"]["login"], user)
 
-    has_next_page = True
-    while has_next_page:
-        for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
-            pr = pr["node"]
-            print "Working on '%s' (%s)" % (pr["title"], pr["url"])
+    # we haven't imported this PR yet
+    if not bridge_pr:
+        cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
+        sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
 
-            bridge_pr = get_none(client.wekan.bridge_for_prs, {
-                "github_id": pr["number"],
-                "github_project": project
-            })
+        card = client.wekan.cards.insert({
+            "_id" : generate_id(),
+            "title" : "[%s] %s" % (project, pr["title"]),
+            "members" : [ ],
+            "labelIds" : [ ],
+            "listId" : list_,
+            "boardId" : board["_id"],
+            "sort" : sort,
+            "archived" : pr["closed"],
+            "createdAt" : datetime.now(), # XXX uses card value?
+            "dateLastActivity" : datetime.now(),
+            "userId" : user
+        })
+        print "create card '%s' (%s)" % (pr["title"], card)
 
-            # get list for milestone
-            milestone = pr["milestone"]
-            if milestone is None:
-                print "No milestone"
-                list_ = get_default_list(client, board)
-                print "selected default list (%s)" % (list_)
+        bridge_pr = client.wekan.bridge_for_prs.insert({
+            "github_id": pr["number"],
+            "github_project": project,
+            "wekan_id": card,
+        })
+        print "create card bridge %s -> %s" % (pr["number"], card)
+
+    else:
+        print "Card already exist, update"
+        card = get_by_id(client.wekan.cards, bridge_pr["wekan_id"])
+
+        title = "[%s] %s" % (project, pr["title"])
+        if card["title"] != title:
+            print "change title from '%s' to '%s'" % (card["title"], title)
+            card["title"] = title
+
+        if card["listId"] != list_:
+            before_list = get_by_id(client.wekan.lists, card["listId"])
+            after_list = get_by_id(client.wekan.lists, list_)
+            print "move card from '%s' -> '%s'" % (before_list["title"], after_list["title"])
+
+        if card["archived"] != pr["closed"]:
+            if pr["closed"]:
+                print "archiving the card"
             else:
-                print "Has milestone"
-                list_ = get_list_for_milestone(client, board, milestone)
-                print "selected list '%s' (%s)" % (milestone["title"], list_)
+                print "card is re-opened"
+            card["archived"] = pr["closed"]
 
-            # get user for ticket
-            user = get_user(client, pr["author"])
-            print "selected user '%s' (%s)" % (pr["author"]["login"], user)
+        if card["userId"] != user:
+            print "card has change of author for a weird reason, update it"
+            card["userId"] = user
 
-            # we haven't imported this PR yet
-            if not bridge_pr:
-                cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
-                sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
-
-                card = client.wekan.cards.insert({
-                    "_id" : generate_id(),
-                    "title" : "[%s] %s" % (project, pr["title"]),
-                    "members" : [ ],
-                    "labelIds" : [ ],
-                    "listId" : list_,
-                    "boardId" : board["_id"],
-                    "sort" : sort,
-                    "archived" : pr["closed"],
-                    "createdAt" : datetime.now(), # XXX uses card value?
-                    "dateLastActivity" : datetime.now(),
-                    "userId" : user
-                })
-                print "create card '%s' (%s)" % (pr["title"], card)
-
-                bridge_pr = client.wekan.bridge_for_prs.insert({
-                    "github_id": pr["number"],
-                    "github_project": project,
-                    "wekan_id": card,
-                })
-                print "create card bridge %s -> %s" % (pr["number"], card)
-
-            else:
-                print "Card already exist, update"
-                card = get_by_id(client.wekan.cards, bridge_pr["wekan_id"])
-
-                title = "[%s] %s" % (project, pr["title"])
-                if card["title"] != title:
-                    print "change title from '%s' to '%s'" % (card["title"], title)
-                    card["title"] = title
-
-                if card["listId"] != list_:
-                    before_list = get_by_id(client.wekan.lists, card["listId"])
-                    after_list = get_by_id(client.wekan.lists, list_)
-                    print "move card from '%s' -> '%s'" % (before_list["title"], after_list["title"])
-
-                if card["archived"] != pr["closed"]:
-                    if pr["closed"]:
-                        print "archiving the card"
-                    else:
-                        print "card is re-opened"
-                    card["archived"] = pr["closed"]
-
-                if card["userId"] != user:
-                    print "card has change of author for a weird reason, update it"
-                    card["userId"] = user
-
-                client.wekan.cards.update({"_id": card["_id"]}, {"$set": card})
-
-            print "----"
-
-        has_next_page = pull_requests["data"]["repository"]["pullRequests"]["pageInfo"]["hasNextPage"]
-        if has_next_page:
-            pagination = ', after: "%s"' % pull_requests["data"]["repository"]["pullRequests"]["pageInfo"]["endCursor"]
-            print pull_requests["data"]["repository"]["pullRequests"]["pageInfo"]
-            pull_requests = requests.post("https://api.github.com/graphql", headers={"Authorization": "bearer %s" % token}, json={"query": query % (project, pagination)}).json()
+        client.wekan.cards.update({"_id": card["_id"]}, {"$set": card})
 
 
+def main():
+    query = open("./query.graphql", "r").read()
+    token = open("graphql_token", "r").read().strip()
+
+    client = MongoClient()
+
+    # pull_requests = json.load(open("./data.json", "r"))
+
+    for project in ["yunohost", "yunohost-admin", "moulinette", "ssowat"]:
+        pull_requests = requests.post("https://api.github.com/graphql", headers={"Authorization": "bearer %s" % token}, json={"query": query % (project, "")}).json()
+
+        has_next_page = True
+        while has_next_page:
+            for pr in pull_requests["data"]["repository"]["pullRequests"]["edges"]:
+                import_pr(client, project, pr["node"])
+
+                print "----"
+
+            has_next_page = pull_requests["data"]["repository"]["pullRequests"]["pageInfo"]["hasNextPage"]
+            if has_next_page:
+                pagination = ', after: "%s"' % pull_requests["data"]["repository"]["pullRequests"]["pageInfo"]["endCursor"]
+                print pull_requests["data"]["repository"]["pullRequests"]["pageInfo"]
+                pull_requests = requests.post("https://api.github.com/graphql", headers={"Authorization": "bearer %s" % token}, json={"query": query % (project, pagination)}).json()
+
+
+if __name__ == '__main__':
+    main()
 
 # TODO
 # * import labels
