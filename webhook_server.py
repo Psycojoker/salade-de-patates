@@ -161,6 +161,8 @@ def github():
 
     hook_type = request.headers.get("X-Github-Event")
 
+    print "Hook type:", hook_type
+
     if hook_type == "pull_request":
         token = open("graphql_token", "r").read().strip()
         query = open("./query-one.graphql", "r").read()
@@ -172,6 +174,7 @@ def github():
                            headers={"Authorization": "bearer %s" % token},
                            json={"query": query % (project, number)}).json()
 
+        print "reimporting pr %s#%s" % (project, number)
         import_pr(client, project, pr["data"]["repository"]["pullRequest"])
 
     elif hook_type == "milestone":
