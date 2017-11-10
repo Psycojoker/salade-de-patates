@@ -1,4 +1,5 @@
 import hmac
+import hashlib
 import requests
 
 from flask import Flask, request, abort
@@ -177,7 +178,7 @@ def github():
         abort(501)
 
     # HMAC requires the key to be bytes, but data is string
-    mac = hmac.new(str(secret), msg=request.data, digestmod='sha1')
+    mac = hmac.new(str(secret), msg=request.data, digestmod=hashlib.sha1)
 
     if not hmac.compare_digest(str(mac.hexdigest()), str(signature)):
         abort(403)
