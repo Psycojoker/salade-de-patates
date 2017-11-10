@@ -60,10 +60,16 @@ client = MongoClient()
 app = Flask(__name__)
 token = open("wekan_webhook_token", "r").read().strip()
 
-@app.route("/wekan", methods=['POST'])
-def wekan():
+@app.route("/wekan/<secret>", methods=['POST'])
+def wekan(secret):
     print request
     print request.json
+
+    # sekuritay
+    local_secret = open("./wekan_webhook_secret", "r").read().strip()
+
+    if local_secret != secret.strip():
+        abort(403)
 
     # TODO check that request is json and correct or some stuff like that
 
