@@ -1,6 +1,7 @@
+import hmac
 import requests
 
-from flask import Flask, request
+from flask import Flask, request, abort
 from pymongo import MongoClient
 
 from common import get_by_id, get_none
@@ -158,6 +159,28 @@ def github():
     # if request.headers.get("X-Hub-Signature").strip() != github_hook_secret:
         # TODO real exception
         # raise 400
+
+
+    # stolen and adapted from here
+    # https://github.com/carlos-jenkins/python-github-webhooks/blob/d485b31c0291d06b5153198bc1de685d50731536/webhooks.py#L72-L93
+    secret = open("./github_webhook_secret", "r").read().strip()
+
+    # Only SHA1 is supported
+    header_signature = request.headers.get('X-Hub-Signature')
+    if header_signature is None:
+        print "no header X-Hub-Signature"
+        abort(403)
+
+    sha_name, signature = header_signature.split('=')
+    if sha_name != 'sha1':
+        print "signing algo isn't sha1, it's '%s'" % sha_name
+        abort(501)
+
+    # HMAC requires the key to be bytes, but data is string
+    mac = hmac.new(str(secret), msg=request.data, digestmod='sha1')
+
+    if not hmac.compare_digest(str(mac.hexdigest()), str(signature)):
+        abort(403)
 
     hook_type = request.headers.get("X-Github-Event")
 
