@@ -6,7 +6,7 @@ from flask import Flask, request, abort
 from pymongo import MongoClient
 
 from common import get_by_id, get_none
-from github_to_wekan import import_pr
+from github_to_wekan import import_pr, get_list_for_milestone, get_board
 
 
 client = MongoClient()
@@ -213,9 +213,14 @@ def github():
         # XXX but I don't have that, don't I? I probably need to write some
         # code for that then
         # actions: created, closed, opened, edited, deleted
+
+        project = request.json["repository"]["name"]
+
         if request.json["action"] == "created":
             # I need to import it here
-            pass
+
+            # this is badly name but will create list (column) on the fly
+            get_list_for_milestone(client, get_board(client), project, request.json["milestone"])
         elif request.json["action"] == "closed":
             # if all milestone are closed, archive to column
             pass

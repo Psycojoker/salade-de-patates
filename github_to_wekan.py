@@ -152,7 +152,7 @@ def get_list_for_milestone(client, board, project, milestone):
             "_id" : generate_id(),
             "title" : milestone["title"],
             "boardId" : board["_id"],
-            "archived" : milestone["state"] == "CLOSED",
+            "archived" : milestone["state"].upper() == "CLOSED",
             "createdAt" : datetime.now(),
             "sort" : sort
         })
