@@ -221,9 +221,33 @@ def github():
 
             # this is badly name but will create list (column) on the fly
             get_list_for_milestone(client, get_board(client), project, request.json["milestone"])
+
         elif request.json["action"] == "closed":
             # if all milestone are closed, archive to column
-            pass
+            # assuming the milestone exist
+            print "Milestone %s#%s as been closed on github" % (project, request.json["milestone"]["number"])
+            bridge_milestone = get(client.wekan.bridge_for_milestones, {
+                "github_id": request.json["milestone"]["number"],
+                "github_project": project
+            })
+
+            print "checking if all other PR are closed"
+            all_closed = True
+            # get all milestone pointing to this list
+            for other_miletone in client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}):
+                # GET /repos/:owner/:repo/milestones/:number
+                print "https://api.github.com/repos/:owner/%s/milestones/%s" % (project, other_miletone["github_id"])
+                other_miletone = requests.get("https://api.github.com/repos/:owner/%s/milestones/%s" % (project, other_miletone["github_id"])).json()
+
+                if other_miletone["state"] == "open":
+                    print "milestone of '%s' is not closed (and maybe other), stop" % other_miletone["github_project"]
+                    all_closed = False
+                    break
+
+            if all_closed:
+                print "all other milestone are closed, closing"
+                client.wekan.lists.update({"_id": bridge_milestone["_id"]}, {"$set": {"archived": True}})
+
         elif request.json["action"] == "opened":
             # set column state to unarchived
             # assuming the milestone exist
@@ -245,7 +269,7 @@ def github():
             #     -> else, create new list, move all my cards into it
             pass
         elif request.json["action"] == "deleted":
-            # if all milestone are closed, archive to column
+            # if all milestone are closed, archive to column, move all cards out in "no milestone"
             pass
         else:
             print "unkown action for milestone webhook: '%s'" % request.json["action"]
