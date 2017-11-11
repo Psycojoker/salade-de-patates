@@ -212,7 +212,31 @@ def github():
         # milestone here
         # XXX but I don't have that, don't I? I probably need to write some
         # code for that then
-        pass
+        # actions: created, closed, opened, edited, deleted
+        if request.json["action"] == "created":
+            # I need to import it here
+            pass
+        elif request.json["action"] == "closed":
+            # if all milestone are closed, archive to column
+            pass
+        elif request.json["action"] == "opened":
+            # set column state to unarchived
+            pass
+        elif request.json["action"] == "edited":
+            # only care about title change
+            # if title change:
+            # * look if I'm the only milestone on that column
+            # * if yes, change title
+            # * if not:
+            #   - are they any other column with new title?
+            #     -> if so, merge into it
+            #     -> else, create new list, move all my cards into it
+            pass
+        elif request.json["action"] == "deleted":
+            # if all milestone are closed, archive to column
+            pass
+        else:
+            print "unkown action for milestone webhook: '%s'" % request.json["action"]
 
     elif hook_type == "label":
         # TODO
