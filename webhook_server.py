@@ -248,7 +248,8 @@ def github():
 
             if all_closed:
                 print "all other milestone are closed, closing"
-                client.wekan.lists.update({"_id": bridge_milestone["_id"]}, {"$set": {"archived": True}})
+                list_ = get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])
+                client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"archived": True}})
 
         elif request.json["action"] == "opened":
             # set column state to unarchived
