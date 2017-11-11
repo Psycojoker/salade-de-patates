@@ -206,9 +206,13 @@ def get_user(client, author):
     return user
 
 
+def get_board(client):
+    return get(client.wekan.boards, {"slug": "yunohost"})
+
+
 def import_pr(client, project, pr):
     # TODO create the bord if it doesn't exist
-    board = get(client.wekan.boards, {"slug": "yunohost"})
+    board = get_board(client)
 
     print "Working on '%s' (%s)" % (pr["title"], pr["url"])
 
