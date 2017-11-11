@@ -5,7 +5,7 @@ import requests
 from flask import Flask, request, abort
 from pymongo import MongoClient
 
-from common import get_by_id, get_none
+from common import get_by_id, get_none, get
 from github_to_wekan import import_pr, get_list_for_milestone, get_board
 
 
@@ -226,7 +226,14 @@ def github():
             pass
         elif request.json["action"] == "opened":
             # set column state to unarchived
-            pass
+            # assuming the milestone exist
+            bridge_milestone = get(client.wekan.bridge_for_milestones, {
+                "github_id": request.json["milestone"]["number"],
+                "github_project": project
+            })
+            list_ = get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])
+            client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"archived": False}})
+
         elif request.json["action"] == "edited":
             # only care about title change
             # if title change:
