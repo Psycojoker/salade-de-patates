@@ -234,6 +234,7 @@ def github():
             print "checking if all other PR are closed"
             all_closed = True
             # get all milestone pointing to this list
+            # this sucks because I need to contact github api
             for other_miletone in client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}):
                 # GET /repos/:owner/:repo/milestones/:number
                 print "https://api.github.com/repos/:owner/%s/milestones/%s" % (project, other_miletone["github_id"])
