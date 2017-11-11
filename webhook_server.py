@@ -10,7 +10,7 @@ from flask import Flask, request, abort
 from pymongo import MongoClient
 
 from common import get_by_id, get_none, get, generate_id
-from github_to_wekan import import_pr, get_list_for_milestone, get_board
+from github_to_wekan import import_pr, get_list_for_milestone, get_board, get_default_list
 
 
 client = MongoClient()
@@ -231,13 +231,14 @@ def github():
     elif hook_type == "milestone":
         # actions: created, closed, opened, edited, deleted
 
+        board = get_board(client)
         project = request.json["repository"]["name"]
 
         if request.json["action"] == "created":
             # I need to import it here
 
             # this is badly name but will create list (column) on the fly
-            get_list_for_milestone(client, get_board(client), project, request.json["milestone"])
+            get_list_for_milestone(client, board, project, request.json["milestone"])
 
         elif request.json["action"] in ("closed", "deleted"):
             print "Milestone %s#%s as been closed on github" % (project, request.json["milestone"]["number"])
@@ -276,6 +277,14 @@ def github():
                     "github_id": request.json["milestone"]["number"],
                     "github_project": project
                 })
+
+                # move all cards out in "no milestone" list
+                print "deleting action, moving all cards "
+                list_ = get_default_list(client, board)
+                for card in client.wekan.cards.find({"listId": list_["_id"]}):
+                    # TODO update title
+                    # should I just uses the "import_pr" here?
+                    client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"listId": list_["_id"]}})
 
         elif request.json["action"] == "opened":
             # set column state to unarchived
