@@ -212,10 +212,6 @@ def github():
         import_pr(client, project, pr["data"]["repository"]["pullRequest"])
 
     elif hook_type == "milestone":
-        # XXX in theory, I only need to run the importation script on one
-        # milestone here
-        # XXX but I don't have that, don't I? I probably need to write some
-        # code for that then
         # actions: created, closed, opened, edited, deleted
 
         project = request.json["repository"]["name"]
