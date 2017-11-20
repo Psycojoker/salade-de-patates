@@ -306,11 +306,17 @@ def github():
                     cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
                     sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
 
+                    # TODO rename all cards
                     client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort}})
 
         elif request.json["action"] == "deleted":
             # if all milestone are closed, archive to column, move all cards out in "no milestone"
-            pass
+
+            # TODO merge with other code for deleted
+            client.wekan.bridge_for_milestones.remove({
+                "github_id": request.json["milestone"]["number"],
+                "github_project": project
+            })
         else:
             print "unkown action for milestone webhook: '%s'" % request.json["action"]
 
