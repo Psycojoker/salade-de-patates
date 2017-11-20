@@ -313,7 +313,7 @@ def github():
                     "sort" : sort
                 })
 
-                client.wekan.cards.update({"github_project": bridge_milestone["github_project"], "github_id": bridge_milestone["github_id"]}, {"$set": {"wekan_id": list_id}})
+                client.wekan.bridge_for_milestones.update({"github_project": bridge_milestone["github_project"], "github_id": bridge_milestone["github_id"]}, {"$set": {"wekan_id": list_id}})
 
             # move all the milestone cards into the new target list
             # this method is really inefficient, I guess I'm missing some sort
