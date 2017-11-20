@@ -1,11 +1,15 @@
+# encoding: utf-8
+
 import hmac
 import hashlib
 import requests
 
+from datetime import datetime
+
 from flask import Flask, request, abort
 from pymongo import MongoClient
 
-from common import get_by_id, get_none, get
+from common import get_by_id, get_none, get, generate_id
 from github_to_wekan import import_pr, get_list_for_milestone, get_board
 
 
@@ -300,8 +304,20 @@ def github():
                 list_id = target_list["_id"]
             else:
                 # else, create new list
-                print "no other colum with new title, create a new one", client, board, project, request.json["milestone"]
-                list_id = get_list_for_milestone(client, board, project, request.json["milestone"])
+                print "no other colum with new title, create a new one", request.json["milestone"]
+                sort = 1 + max([x.get("sort", 0) for x in client.wekan.lists.find({"boardId": board["_id"]})])
+
+                print "create new list '%s'" % new_list_title
+                list_ = client.wekan.lists.insert({
+                    "_id" : generate_id(),
+                    "title" : new_list_title,
+                    "boardId" : board["_id"],
+                    "archived" : False,
+                    "createdAt" : datetime.now(),
+                    "sort" : sort
+                })
+
+                client.wekan.cards.update({"github_project": bridge_milestone["github_project"], "github_id": bridge_milestone["github_id"]}, {"$set": {"wekan_id": list_}})
 
             # move all the milestone cards into the new target list
             # this method is really inefficient, I guess I'm missing some sort
