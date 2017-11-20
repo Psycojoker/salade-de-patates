@@ -262,15 +262,46 @@ def github():
             client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"archived": False}})
 
         elif request.json["action"] == "edited":
+            print request.json["changes"]
+
+            bridge_milestone = get(client.wekan.bridge_for_milestones, {
+                "github_id": request.json["milestone"]["number"],
+                "github_project": project
+            })
+
             # only care about title change
-            # if title change:
-            # * look if I'm the only milestone on that column
-            # * if yes, change title
-            # * if not:
-            #   - are they any other column with new title?
-            #     -> if so, merge into it
-            #     -> else, create new list, move all my cards into it
-            pass
+            if not request.json["changes"]["title"].get("from") != request.json["milestone"]["title"]:
+                return "ok"
+
+            new_title = request.json["milestone"]["title"]
+            new_list_title = "%s [MILESTONE]" % new_title
+
+            # if I'm the only milestone on that column rename it
+            if len(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]})) == 1:
+                client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"title": new_list_title}})
+                return "ok"
+
+            # I'm not the only milestone pointing on that column
+
+            target_list = get_none(client.wekan.lists, {"title": new_list_title})
+
+            board = get_board(client)
+
+            # are they any other column with the same new title?
+            if target_list:
+                # if so, merge into it
+                list_id = target_list["_id"]
+            else:
+                # else, create new list
+                list_id = get_list_for_milestone(client, board, project, request.json["milestone"])
+
+            # move all my cards into the new target list
+            for card in client.wekan.cards.find({"listId": bridge_milestone["wekan_id"]}):
+                cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
+                sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
+
+                client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort}})
+
         elif request.json["action"] == "deleted":
             # if all milestone are closed, archive to column, move all cards out in "no milestone"
             pass
