@@ -286,7 +286,7 @@ def github():
                 # rename card: change milestone titles
                 for card in client.wekan.cards.find({"listId": list_["_id"]}):
                     old_milestone_card_title = "{%s}" % request.json["changes"]["title"]["from"].lower().replace(" ", "-")
-                    new_milestone_card_title = "{%s}" % request.json["milesone"]["title"].lower().replace(" ", "-")
+                    new_milestone_card_title = "{%s}" % request.json["milestone"]["title"].lower().replace(" ", "-")
                     title = card["title"].replace(old_milestone_card_title, new_milestone_card_title, 1)
                     print "rename card: '%s' -> '%s'" % (card["title"], title)
                     client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"title": title}})
