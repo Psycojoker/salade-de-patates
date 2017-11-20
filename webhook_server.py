@@ -333,6 +333,8 @@ def github():
                     print "'%s' (%s): %s -> %s [%s]" % (card["title"], card["_id"], bridge_milestone["wekan_id"], list_id, sort)
                     client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort}})
 
+            # TODO if previous list I'm leaving is empty, archive it
+
         elif request.json["action"] == "deleted":
             # if all milestone are closed, archive to column, move all cards out in "no milestone"
 
