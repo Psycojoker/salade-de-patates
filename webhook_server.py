@@ -275,7 +275,7 @@ def github():
 
             new_title = request.json["milestone"]["title"]
             new_list_title = "%s [MILESTONE]" % new_title
-            list_ = get_by_id(client.wekan.list, bridge_milestone["wekan_id"])
+            list_ = get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])
 
             # if I'm the only milestone on that column rename it
             if len(list(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}))) == 1:
