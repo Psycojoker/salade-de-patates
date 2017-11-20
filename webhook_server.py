@@ -277,7 +277,7 @@ def github():
             new_list_title = "%s [MILESTONE]" % new_title
 
             # if I'm the only milestone on that column rename it
-            if len(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]})) == 1:
+            if len(list(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}))) == 1:
                 client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"title": new_list_title}})
                 return "ok"
 
