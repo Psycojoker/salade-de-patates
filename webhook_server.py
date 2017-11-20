@@ -270,7 +270,7 @@ def github():
             })
 
             # only care about title change
-            if not request.json["changes"]["title"].get("from") != request.json["milestone"]["title"]:
+            if not request.json["changes"].get("title"):
                 return "ok"
 
             new_title = request.json["milestone"]["title"]
