@@ -147,7 +147,7 @@ def get_list_for_milestone(client, board, project, milestone):
     if not list_:
         sort = 1 + max([x.get("sort", 0) for x in client.wekan.lists.find({"boardId": board["_id"]})])
 
-        print "create new list '%s'" % milestone["title"]
+        print "create new list '%s'" % milestone_title
         list_ = client.wekan.lists.insert({
             "_id" : generate_id(),
             "title" : milestone_title,
