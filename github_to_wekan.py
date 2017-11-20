@@ -150,7 +150,7 @@ def get_list_for_milestone(client, board, project, milestone):
         print "create new list '%s'" % milestone["title"]
         list_ = client.wekan.lists.insert({
             "_id" : generate_id(),
-            "title" : milestone["title"],
+            "title" : milestone_title,
             "boardId" : board["_id"],
             "archived" : milestone["state"].upper() == "CLOSED",
             "createdAt" : datetime.now(),
