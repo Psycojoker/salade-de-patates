@@ -308,7 +308,7 @@ def github():
                 sort = 1 + max([x.get("sort", 0) for x in client.wekan.lists.find({"boardId": board["_id"]})])
 
                 print "create new list '%s'" % new_list_title
-                list_ = client.wekan.lists.insert({
+                list_id = client.wekan.lists.insert({
                     "_id" : generate_id(),
                     "title" : new_list_title,
                     "boardId" : board["_id"],
@@ -317,7 +317,7 @@ def github():
                     "sort" : sort
                 })
 
-                client.wekan.cards.update({"github_project": bridge_milestone["github_project"], "github_id": bridge_milestone["github_id"]}, {"$set": {"wekan_id": list_}})
+                client.wekan.cards.update({"github_project": bridge_milestone["github_project"], "github_id": bridge_milestone["github_id"]}, {"$set": {"wekan_id": list_id}})
 
             # move all the milestone cards into the new target list
             # this method is really inefficient, I guess I'm missing some sort
