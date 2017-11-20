@@ -281,8 +281,16 @@ def github():
             if len(list(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}))) == 1:
                 print "I'm the only milestone on that column rename it"
                 print list(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}))
-                # TODO rename all cards
                 client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"title": new_list_title}})
+
+                # rename card: change milestone titles
+                for card in client.wekan.cards.find({"listId": list_["_id"]}):
+                    old_milestone_card_title = "{%s}" % request.json["changes"]["title"]["from"]["title"].lower().replace(" ", "-")
+                    new_milestone_card_title = "{%s}" % request.json["milesone"]["title"].lower().replace(" ", "-")
+                    title = card["title"].replace(old_milestone_card_title, new_milestone_card_title, 1)
+                    print "rename card: '%s' -> '%s'" % (card["title"], title)
+                    client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"title": title}})
+
                 return "ok"
 
             # I'm not the only milestone pointing on that column
