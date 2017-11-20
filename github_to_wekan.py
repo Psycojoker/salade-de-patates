@@ -159,7 +159,7 @@ def get_list_for_milestone(client, board, project, milestone):
     else:
         update_list(list_, milestone)
         list_ = list_["_id"]
-        print "List exists for milestone '%s', return it"
+        print "List exists for milestone '%s', return it" % milestone["title"]
 
     print "Create bridge for milestone %s -> %s" % (milestone["number"], list_)
     bridge_milestone = client.wekan.bridge_for_milestones.insert({
