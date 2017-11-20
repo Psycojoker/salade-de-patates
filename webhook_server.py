@@ -324,8 +324,6 @@ def github():
                 client.wekan.bridge_for_milestones.update({"github_project": bridge_milestone["github_project"], "github_id": bridge_milestone["github_id"]}, {"$set": {"wekan_id": list_id}})
 
             # move all the milestone cards into the new target list
-            # this method is really inefficient, I guess I'm missing some sort
-            # of join here but it's mongodb and that's fast enough for now
             for bridge_pr in client.wekan.bridge_for_prs.find({"github_project": project}):
                 card = get_by_id(client.wekan.cards, bridge_pr["wekan_id"])
 
@@ -333,9 +331,13 @@ def github():
                     cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
                     sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
 
-                    # TODO rename all cards
+                    old_milestone_card_title = "{%s}" % request.json["changes"]["title"]["from"].lower().replace(" ", "-")
+                    new_milestone_card_title = "{%s}" % request.json["milestone"]["title"].lower().replace(" ", "-")
+                    title = card["title"].replace(old_milestone_card_title, new_milestone_card_title, 1)
+
                     print "'%s' (%s): %s -> %s [%s]" % (card["title"], card["_id"], bridge_milestone["wekan_id"], list_id, sort)
-                    client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort}})
+                    print "rename card '%s' -> '%s'" % (card["title"], title)
+                    client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort, "title": title}})
 
             # TODO if previous list I'm leaving is empty, archive it
 
