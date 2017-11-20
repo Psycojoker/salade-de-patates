@@ -296,12 +296,17 @@ def github():
                 # else, create new list
                 list_id = get_list_for_milestone(client, board, project, request.json["milestone"])
 
-            # move all my cards into the new target list
-            for card in client.wekan.cards.find({"listId": bridge_milestone["wekan_id"]}):
-                cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
-                sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
+            # move all the milestone cards into the new target list
+            # this method is really inefficient, I guess I'm missing some sort
+            # of join here but it's mongodb and that's fast enough for now
+            for bridge_pr in client.wekan.bridge_for_prs.find({"github_project": project}):
+                card = get_by_id(client.wekan.cards, bridge_pr["wekan_id"])
 
-                client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort}})
+                if card["listId"] == bridge_milestone["wekan_id"]:
+                    cards_in_column = list(client.wekan.cards.find({"boardId": board["_id"], "listId": list_}))
+                    sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
+
+                    client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort}})
 
         elif request.json["action"] == "deleted":
             # if all milestone are closed, archive to column, move all cards out in "no milestone"
