@@ -279,21 +279,28 @@ def github():
 
             # if I'm the only milestone on that column rename it
             if len(list(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}))) == 1:
+                print "I'm the only milestone on that column rename it"
+                print list(client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}))
+                # TODO rename all cards
                 client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"title": new_list_title}})
                 return "ok"
 
             # I'm not the only milestone pointing on that column
 
             target_list = get_none(client.wekan.lists, {"title": new_list_title})
+            print "new_list_title:", new_list_title
+            print "target list:", target_list
 
             board = get_board(client)
 
             # are they any other column with the same new title?
             if target_list:
                 # if so, merge into it
+                print "there is one list with the same title, merge into it"
                 list_id = target_list["_id"]
             else:
                 # else, create new list
+                print "no other colum with new title, create a new one", client, board, project, request.json["milestone"]
                 list_id = get_list_for_milestone(client, board, project, request.json["milestone"])
 
             # move all the milestone cards into the new target list
@@ -307,6 +314,7 @@ def github():
                     sort = 1 + (max([x.get("sort", 0) for x in cards_in_column]) if cards_in_column else -1)
 
                     # TODO rename all cards
+                    print "'%s' (%s): %s -> %s [%s]" % (card["title"], card["_id"], bridge_milestone["wekan_id"], list_id, sort)
                     client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort}})
 
         elif request.json["action"] == "deleted":
