@@ -339,8 +339,6 @@ def github():
                     print "rename card '%s' -> '%s'" % (card["title"], title)
                     client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort, "title": title}})
 
-            # TODO if previous list I'm leaving is empty, archive it
-
         elif request.json["action"] == "deleted":
             # if all milestone are closed, archive to column, move all cards out in "no milestone"
 
