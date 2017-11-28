@@ -128,20 +128,37 @@ def wekan(secret):
         github_milestone_id = github_pr["milestone"]["number"]
 
         if list_ is None:
-            # TODO try to detect if there is a list that is a milestone with
+            # try to detect if there is a list that is a milestone with
             # the same name but that isn't in that project, if so, create the
             # milestone in the project where it's missing
 
-            # rename to include milestone name in list?
-            print "new list is not known as a milestone, skip"
-            return "ok"
+            list_bridge = list(client.wekan.bridge_for_milestones.find({"wekan_id": list_id}))
 
-        # TODO default list for unmilestoning a card
+            if list_bridge is None:
+                print "new list is not known as a milestone, skip"
+                return "ok"
+
+            list_bridge = list_bridge[0]
+            print "list is linked to milestone of other projects"
+            print "-> create a milestone with the same name in '%s' project" % project
+
+            # create the milestone on github on the project that hasn't have it
+            list_ = get_by_id(client.wekan.lists, list_id)
+            github_milestone = requests.post("https://api.github.com/repos/yunohost/%s/milestoness" % project, json={"title": list_["title"].replace(" [MILESTONE]").strip()}, headers={"Authorization": "bearer %s" % token})
+            print github_milestone
+            print github_milestone.json
+
+            bridge_milestone_id = client.wekan.bridge_for_milestones.insert({
+                "github_id": github_milestone.json["number"],
+                "github_project": project,
+                "wekan_id": list_id
+            })
+
+            list_ = get_by_id(client.wekan.bridge_for_milestones, bridge_milestone_id)
 
         # check if target column milestone number != github_milestone_id
         # if so, change it
         # else return
-
         if list_["github_id"] != github_milestone_id:
             print "online github PR is different than the targeted list, change it"
             print requests.patch("https://api.github.com/repos/yunohost/%s/issues/%s" % (project, pr_bridge["github_id"]), json={"milestone": list_["github_id"]}, headers={"Authorization": "bearer %s" % token})
