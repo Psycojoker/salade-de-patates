@@ -104,16 +104,16 @@ def wekan(secret):
         card_id = request.json["cardId"]
         card = get_by_id(client.wekan.cards, card_id)
 
-        bridge = get_none(client.wekan.bridge_for_prs, {"wekan_id": card_id})
+        pr_bridge = get_none(client.wekan.bridge_for_prs, {"wekan_id": card_id})
 
-        print "bridge:", bridge
+        print "bridge:", pr_bridge
         print "card:", card
 
-        if bridge is None:
+        if pr_bridge is None:
             print "unhandled card", card_id
             return "unhandled card"
 
-        project = bridge["github_project"]
+        project = pr_bridge["github_project"]
 
         list_id = request.json["listId"]
 
@@ -123,7 +123,7 @@ def wekan(secret):
         # list can be: know (a milestone), unknow
         # card was in a milestone, wasn't [back to its milestone or in another milestone]
 
-        github_pr = requests.get("https://api.github.com/repos/yunohost/%s/pulls/%s" % (project, bridge["github_id"])).json()
+        github_pr = requests.get("https://api.github.com/repos/yunohost/%s/pulls/%s" % (project, pr_bridge["github_id"])).json()
 
         github_milestone_id = github_pr["milestone"]["number"]
 
@@ -144,12 +144,12 @@ def wekan(secret):
 
         if list_["github_id"] != github_milestone_id:
             print "online github PR is different than the targeted list, change it"
-            print requests.patch("https://api.github.com/repos/yunohost/%s/issues/%s" % (project, bridge["github_id"]), json={"milestone": list_["github_id"]}, headers={"Authorization": "bearer %s" % token})
+            print requests.patch("https://api.github.com/repos/yunohost/%s/issues/%s" % (project, pr_bridge["github_id"]), json={"milestone": list_["github_id"]}, headers={"Authorization": "bearer %s" % token})
 
             query = open("./query-one.graphql", "r").read()
             pr = requests.post("https://api.github.com/graphql",
                                headers={"Authorization": "bearer %s" % token},
-                               json={"query": query % (project, bridge["github_id"])}).json()
+                               json={"query": query % (project, pr_bridge["github_id"])}).json()
 
             import_pr(client, project, pr["data"]["repository"]["pullRequest"])
         else:
