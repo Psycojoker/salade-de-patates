@@ -222,15 +222,15 @@ def github():
             # this is badly name but will create list (column) on the fly
             get_list_for_milestone(client, get_board(client), project, request.json["milestone"])
 
-        elif request.json["action"] == "closed":
-            # if all milestone are closed, archive to column
-            # assuming the milestone exist
+        elif request.json["action"] in ("closed", "deleted"):
             print "Milestone %s#%s as been closed on github" % (project, request.json["milestone"]["number"])
             bridge_milestone = get(client.wekan.bridge_for_milestones, {
                 "github_id": request.json["milestone"]["number"],
                 "github_project": project
             })
 
+            # if all milestone pointing to this list are closed, archive to
+            # column assuming the milestone exist
             print "checking if all other PR are closed"
             all_closed = True
             # get all milestone pointing to this list
@@ -246,10 +246,19 @@ def github():
                     all_closed = False
                     break
 
-            if all_closed:
+            list_ = get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])
+
+            list_is_empty = len(list(client.wekan.cards.find({"listId": list_["_id"], "archived": False}))) == 0
+
+            if all_closed and list_is_empty:
                 print "all other milestone are closed, closing"
-                list_ = get_by_id(client.wekan.lists, bridge_milestone["wekan_id"])
                 client.wekan.lists.update({"_id": list_["_id"]}, {"$set": {"archived": True}})
+
+            if request.json["action"] == "deleted":
+                client.wekan.bridge_for_milestones.remove({
+                    "github_id": request.json["milestone"]["number"],
+                    "github_project": project
+                })
 
         elif request.json["action"] == "opened":
             # set column state to unarchived
@@ -339,14 +348,6 @@ def github():
                     print "rename card '%s' -> '%s'" % (card["title"], title)
                     client.wekan.cards.update({"_id": card["_id"]}, {"$set": {"listId": list_id, "sort": sort, "title": title}})
 
-        elif request.json["action"] == "deleted":
-            # if all milestone are closed, archive to column, move all cards out in "no milestone"
-
-            # TODO merge with other code for deleted
-            client.wekan.bridge_for_milestones.remove({
-                "github_id": request.json["milestone"]["number"],
-                "github_project": project
-            })
         else:
             print "unkown action for milestone webhook: '%s'" % request.json["action"]
 
