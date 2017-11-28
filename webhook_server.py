@@ -255,7 +255,7 @@ def github():
             for other_miletone in client.wekan.bridge_for_milestones.find({"wekan_id": bridge_milestone["wekan_id"]}):
                 # GET /repos/:owner/:repo/milestones/:number
                 other_project = other_miletone["github_project"]
-                print "https://api.github.com/repos/:owner/%s/milestones/%s" % (other_project, other_miletone["github_id"])
+                print "https://api.github.com/repos/yunohost/%s/milestones/%s" % (other_project, other_miletone["github_id"])
                 other_miletone = requests.get("https://api.github.com/repos/yunohost/%s/milestones/%s" % (other_project, other_miletone["github_id"])).json()
 
                 if other_miletone["state"] == "open":
