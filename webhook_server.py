@@ -134,7 +134,7 @@ def wekan(secret):
 
             list_bridge = list(client.wekan.bridge_for_milestones.find({"wekan_id": list_id}))
 
-            if list_bridge is None:
+            if not list_bridge:
                 print "new list is not known as a milestone, skip"
                 return "ok"
 
