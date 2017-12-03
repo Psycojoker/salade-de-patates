@@ -149,7 +149,7 @@ def wekan(secret):
             print github_milestone.json
 
             bridge_milestone_id = client.wekan.bridge_for_milestones.insert({
-                "github_id": github_milestone.json["number"],
+                "github_id": github_milestone.json()["number"],
                 "github_project": project,
                 "wekan_id": list_id
             })
