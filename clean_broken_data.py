@@ -7,7 +7,7 @@ client = MongoClient()
 token = open("wekan_webhook_token", "r").read().strip()
 
 for project in ["yunohost", "yunohost-admin", "moulinette", "ssowat"]:
-    milestones = requests.get("https://api.github.com/repos/yunohost/%s/milestones" % project, headers={"Authorization": "bearer %s" % token}).json()
+    milestones = requests.get("https://api.github.com/repos/yunohost/%s/milestones" % project, data={"state": "all"}, headers={"Authorization": "bearer %s" % token}).json()
 
     used_numbers = {x["number"] for x in milestones}
 
