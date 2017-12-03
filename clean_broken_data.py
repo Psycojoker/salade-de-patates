@@ -13,5 +13,5 @@ for project in ["yunohost", "yunohost-admin", "moulinette", "ssowat"]:
 
     for i in client.wekan.bridge_for_milestones.find({"github_project": project}):
         if i["github_id"] not in used_numbers:
-            # client.wekan.remove({"github_id": i["github_id"], "github_project": project})
             print 'client.wekan.remove({"github_id": %s, "github_project": %s})' % (i["github_id"], project)
+            client.wekan.remove({"github_id": i["github_id"], "github_project": project})
