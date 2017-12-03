@@ -125,7 +125,7 @@ def wekan(secret):
 
         github_pr = requests.get("https://api.github.com/repos/yunohost/%s/pulls/%s" % (project, pr_bridge["github_id"])).json()
 
-        github_milestone_id = github_pr.get("milestone", {}).get("number")
+        github_milestone_id = github_pr["milestone"]["number"] if github_pr["milestone"] is not None else None
 
         if list_ is None:
             # try to detect if there is a list that is a milestone with
