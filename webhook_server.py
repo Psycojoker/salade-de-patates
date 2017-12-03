@@ -146,7 +146,7 @@ def wekan(secret):
             list_ = get_by_id(client.wekan.lists, list_id)
             github_milestone = requests.post("https://api.github.com/repos/yunohost/%s/milestoness" % project, json={"title": list_["title"].replace(" [MILESTONE]", "").strip()}, headers={"Authorization": "bearer %s" % token})
             print github_milestone
-            print github_milestone.json
+            print github_milestone.json()
 
             bridge_milestone_id = client.wekan.bridge_for_milestones.insert({
                 "github_id": github_milestone.json()["number"],
