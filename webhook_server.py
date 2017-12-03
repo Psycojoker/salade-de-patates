@@ -144,7 +144,7 @@ def wekan(secret):
 
             # create the milestone on github on the project that hasn't have it
             list_ = get_by_id(client.wekan.lists, list_id)
-            github_milestone = requests.post("https://api.github.com/repos/yunohost/%s/milestoness" % project, json={"title": list_["title"].replace(" [MILESTONE]").strip()}, headers={"Authorization": "bearer %s" % token})
+            github_milestone = requests.post("https://api.github.com/repos/yunohost/%s/milestoness" % project, json={"title": list_["title"].replace(" [MILESTONE]", "").strip()}, headers={"Authorization": "bearer %s" % token})
             print github_milestone
             print github_milestone.json
 
